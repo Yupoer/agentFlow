@@ -5,9 +5,11 @@ import json
 from typing import Any
 
 try:
+    from runtime.discord_slash import WorkflowSlashError, parse_workflow_slash
     from runtime.orchestrator import WorkflowOrchestrator, demo_llm
     from runtime.templates import TemplateError, edit_template, install_template
 except ModuleNotFoundError:
+    from discord_slash import WorkflowSlashError, parse_workflow_slash
     from orchestrator import WorkflowOrchestrator, demo_llm
     from templates import TemplateError, edit_template, install_template
 
@@ -38,6 +40,9 @@ def main(argv: list[str] | None = None) -> int:
     run = sub.add_parser("run", help="run a natural-language workflow message")
     run.add_argument("message")
 
+    slash = sub.add_parser("slash", help="route a Discord /workflow command body")
+    slash.add_argument("message")
+
     run_template = sub.add_parser("run-template", help="run a reusable workflow template")
     run_template.add_argument("template")
     run_template.add_argument("--input", action="append", default=[], help="template input as key=value")
@@ -66,6 +71,13 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "run":
         result = orchestrator.run(args.message)
+    elif args.command == "slash":
+        try:
+            routed = parse_workflow_slash(args.message)
+        except WorkflowSlashError as exc:
+            result = {"status": "error", "error": str(exc)}
+        else:
+            return main(routed.argv)
     elif args.command == "run-template":
         result = orchestrator.run_template(args.template, _parse_kv(args.input))
     elif args.command == "list":
