@@ -1,0 +1,66 @@
+{
+  "name": "hermes-workflow",
+  "version": "0.1.0",
+  "runtime": {
+    "entry": "runtime.activation:activate",
+    "orchestrator": "runtime.orchestrator:WorkflowOrchestrator"
+  },
+  "activation": {
+    "prefixes": [
+      "啟用 workflow：",
+      "啟用 workflow:",
+      "workflow：",
+      "workflow:"
+    ]
+  },
+  "stages": [
+    {
+      "id": "stage1",
+      "name": "Request Normalizer",
+      "prompt": "prompts/stage1-request-normalizer.md",
+      "schema": "schemas/stage1-normalized-request.schema.json",
+      "output": "normalized_request"
+    },
+    {
+      "id": "stage2",
+      "name": "Planner",
+      "prompt": "prompts/stage2-planner.md",
+      "schema": "schemas/stage2-plan.schema.json",
+      "output": "plan"
+    },
+    {
+      "id": "stage3",
+      "name": "Executor",
+      "schema": "schemas/stage3-executor-output.schema.json",
+      "output": "executor_output"
+    },
+    {
+      "id": "stage4",
+      "name": "Verifier",
+      "schema": "schemas/stage4-verifier-output.schema.json",
+      "output": "verifier_output"
+    },
+    {
+      "id": "stage5",
+      "name": "Writer / Assembler",
+      "schema": "schemas/stage5-final-output.schema.json",
+      "output": "final_output"
+    }
+  ],
+  "compact_output": {
+    "workflow_id": "string",
+    "status": "direct_answer | ready | partial | blocked | error",
+    "objective": "string",
+    "summary": "string",
+    "plan_summary": "string",
+    "execution_summary": "string",
+    "verification_summary": "string",
+    "steps": [],
+    "blockers": [],
+    "errors": [],
+    "final_output": {},
+    "execution_mode": "standalone | delegated",
+    "stage3_available": "boolean",
+    "partial_reason": "string"
+  }
+}

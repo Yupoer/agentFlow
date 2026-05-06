@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hermes Workflow Stage 5 Final Output",
+  "type": "object",
+  "required": [
+    "status",
+    "objective",
+    "summary",
+    "plan_summary",
+    "execution_summary",
+    "verification_summary",
+    "steps",
+    "blockers",
+    "errors",
+    "execution_mode",
+    "stage3_available",
+    "partial_reason"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "partial",
+        "blocked",
+        "error"
+      ]
+    },
+    "objective": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "plan_summary": {
+      "type": "string"
+    },
+    "execution_summary": {
+      "type": "string"
+    },
+    "verification_summary": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "step_id",
+          "status",
+          "verdict",
+          "output"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "step_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "failed",
+              "skipped"
+            ]
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "skipped"
+            ]
+          },
+          "output": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "execution_mode": {
+      "type": "string",
+      "enum": [
+        "standalone",
+        "delegated"
+      ]
+    },
+    "stage3_available": {
+      "type": "boolean"
+    },
+    "partial_reason": {
+      "type": "string"
+    }
+  }
+}

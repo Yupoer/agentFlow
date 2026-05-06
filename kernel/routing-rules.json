@@ -1,0 +1,33 @@
+{
+  "activation_prefixes": [
+    "啟用 workflow：",
+    "啟用 workflow:",
+    "workflow：",
+    "workflow:"
+  ],
+  "routes": [
+    {
+      "match": "activation_prefix",
+      "mode": "workflow",
+      "stages": [
+        "stage1",
+        "stage2"
+      ]
+    },
+    {
+      "match": "default",
+      "mode": "direct_answer",
+      "stages": []
+    }
+  ],
+  "compact_output_fields": [
+    "workflow_id",
+    "status",
+    "objective",
+    "summary",
+    "steps",
+    "risks",
+    "blockers",
+    "errors"
+  ]
+}
