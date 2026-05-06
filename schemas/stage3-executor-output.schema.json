@@ -3,60 +3,37 @@
   "title": "Stage3ExecutorOutput",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "status",
-    "step_results",
-    "blockers"
-  ],
+  "required": ["status", "step_results", "blockers"],
   "properties": {
-    "status": {
-      "type": "string",
-      "enum": [
-        "ready",
-        "partial",
-        "blocked"
-      ]
-    },
+    "status": {"type": "string", "enum": ["ready", "partial", "blocked"]},
     "step_results": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "step_id",
-          "status",
-          "output",
-          "error"
-        ],
+        "required": ["step_id", "status", "output", "error"],
         "properties": {
-          "step_id": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "done",
-              "failed",
-              "skipped"
-            ]
-          },
-          "output": {
-            "type": "string"
-          },
-          "error": {
-            "type": [
-              "string",
-              "null"
-            ]
+          "step_id": {"type": "string"},
+          "status": {"type": "string", "enum": ["done", "failed", "skipped"]},
+          "output": {"type": "string"},
+          "error": {"type": ["string", "null"]},
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "uri", "status"],
+              "properties": {
+                "type": {"type": "string", "enum": ["file", "url", "email", "message", "json", "markdown", "other"]},
+                "uri": {"type": "string"},
+                "status": {"type": "string", "enum": ["created", "verified", "pending", "missing"]},
+                "description": {"type": "string"}
+              }
+            }
           }
         }
       }
     },
-    "blockers": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    }
+    "blockers": {"type": "array", "items": {"type": "string"}}
   }
 }

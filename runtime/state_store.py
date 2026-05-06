@@ -30,6 +30,8 @@ class WorkflowState:
     execution_mode: str = "standalone"
     stage3_available: bool = False
     partial_reason: str = ""
+    activation_trigger: str = "none"
+    execution_requested: bool = True
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
 
@@ -78,6 +80,9 @@ def compact_output(state: WorkflowState) -> dict[str, Any]:
         "verifier_status": state.verifier_output.get("status") if state.verifier_output else None,
         "verifier_summary": state.verifier_output.get("summary") if state.verifier_output else None,
         "verifier_output": state.verifier_output,
+        "activation_trigger": state.activation_trigger,
+        "execution": state.execution_requested,
+        "execution_requested": state.execution_requested,
     }
 
 
@@ -114,3 +119,18 @@ class JsonlStateStore:
                 if row.get("workflow_id") == workflow_id:
                     latest_match = row
         return latest_match
+
+
+def list_states(store: JsonlStateStore) -> list[dict[str, Any]]:
+    if not store.path.exists():
+        return []
+    latest_by_id: dict[str, dict[str, Any]] = {}
+    with store.path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            workflow_id = row.get("workflow_id")
+            if workflow_id:
+                latest_by_id[workflow_id] = row
+    return sorted(latest_by_id.values(), key=lambda row: row.get("updated_at", 0), reverse=True)

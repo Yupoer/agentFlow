@@ -90,6 +90,17 @@ def validate_schema(instance: dict[str, Any], schema: dict[str, Any]) -> None:
 
 
 def _minimal_validate(value: Any, schema: dict[str, Any], path: str) -> None:
+    any_of = schema.get("anyOf")
+    if any_of is not None:
+        errors = []
+        for child_schema in any_of:
+            try:
+                _minimal_validate(value, child_schema, path)
+                return
+            except ValidationError as exc:
+                errors.append(str(exc))
+        raise ValidationError(f"{path}: expected anyOf match; {errors[0] if errors else ''}")
+
     expected_type = schema.get("type")
     if isinstance(expected_type, list):
         errors = []
@@ -181,7 +192,7 @@ def validate_stage3_step_result(data: dict[str, Any]) -> None:
     for key in required:
         if key not in data:
             raise ValidationError(f"stage3 step result missing required key '{key}'")
-    unexpected = set(data) - set(required)
+    unexpected = set(data) - set(required) - {"artifacts"}
     if unexpected:
         raise ValidationError(f"stage3 step result unexpected keys: {sorted(unexpected)}")
     if not isinstance(data["step_id"], str) or not data["step_id"].strip():
@@ -196,6 +207,31 @@ def validate_stage3_step_result(data: dict[str, Any]) -> None:
         raise ValidationError("stage3 done step result requires error to be null")
     if data["status"] in {"failed", "skipped"} and not data["error"]:
         raise ValidationError("stage3 failed/skipped step result requires error")
+    artifacts = data.get("artifacts", [])
+    if not isinstance(artifacts, list):
+        raise ValidationError("stage3 step result artifacts must be an array")
+    for artifact in artifacts:
+        validate_stage3_artifact(artifact)
+
+
+def validate_stage3_artifact(data: dict[str, Any]) -> None:
+    if not isinstance(data, dict):
+        raise ValidationError("stage3 artifact must be an object")
+    required = ("type", "uri", "status")
+    for key in required:
+        if key not in data:
+            raise ValidationError(f"stage3 artifact missing required key '{key}'")
+    unexpected = set(data) - set(required) - {"description"}
+    if unexpected:
+        raise ValidationError(f"stage3 artifact unexpected keys: {sorted(unexpected)}")
+    if data["type"] not in {"file", "url", "email", "message", "json", "markdown", "other"}:
+        raise ValidationError("stage3 artifact type is invalid")
+    if not isinstance(data["uri"], str) or not data["uri"].strip():
+        raise ValidationError("stage3 artifact requires uri")
+    if data["status"] not in {"created", "verified", "pending", "missing"}:
+        raise ValidationError("stage3 artifact status is invalid")
+    if "description" in data and not isinstance(data["description"], str):
+        raise ValidationError("stage3 artifact description must be a string")
 
 
 def validate_stage3_contract(data: dict[str, Any]) -> None:

@@ -1,25 +1,67 @@
 {
-  "activation_prefixes": [
-    "啟用 workflow：",
-    "啟用 workflow:",
-    "workflow：",
-    "workflow:"
-  ],
+  "activation_model": "two_stage_detector",
   "routes": [
     {
-      "match": "activation_prefix",
+      "name": "explicit_prefix",
+      "match": "message starts with any activation_prefix",
       "mode": "workflow",
+      "priority": 1,
       "stages": [
         "stage1",
         "stage2"
       ]
     },
     {
-      "match": "default",
+      "name": "semantic_workflow_detector",
+      "match": "message contains at least one workflow_intent_term and at least one action_term",
+      "mode": "workflow",
+      "priority": 2,
+      "stages": [
+        "stage1",
+        "stage2"
+      ]
+    },
+    {
+      "name": "default",
+      "match": "otherwise",
       "mode": "direct_answer",
+      "priority": 99,
       "stages": []
     }
   ],
+  "activation_prefixes": [
+    "啟用 workflow：",
+    "啟用 workflow:",
+    "workflow：",
+    "workflow:"
+  ],
+  "semantic_detector": {
+    "workflow_intent_terms": [
+      "workflow",
+      "流程",
+      "多階段",
+      "stage"
+    ],
+    "action_terms": [
+      "建",
+      "建立",
+      "設計",
+      "規劃",
+      "plan",
+      "拆步驟",
+      "先給我計劃"
+    ],
+    "rule": "workflow mode only when both workflow_intent_terms and action_terms appear"
+  },
+  "plan_only_detector": {
+    "terms": [
+      "先給我看",
+      "我修正後再建立",
+      "先 review",
+      "先review"
+    ],
+    "effect": "set execution=false / execution_requested=false so runtime stops after Stage 1/2"
+  },
   "compact_output_fields": [
     "workflow_id",
     "status",
@@ -28,6 +70,9 @@
     "steps",
     "risks",
     "blockers",
-    "errors"
+    "errors",
+    "activation_trigger",
+    "execution",
+    "execution_requested"
   ]
 }

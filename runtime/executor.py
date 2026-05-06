@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 try:
+    from runtime.tool_registry import HermesToolRegistry
     from runtime.validator import (
         LLMQuotaExceededError,
         ValidationError,
@@ -17,6 +18,7 @@ try:
         validate_stage_output,
     )
 except ModuleNotFoundError:
+    from tool_registry import HermesToolRegistry
     from validator import (
         LLMQuotaExceededError,
         ValidationError,
@@ -40,18 +42,21 @@ class Stage3Executor:
         delegate_task: DelegateTaskFn | None,
         parent_agent: Any | None,
         schema_path: str | Path | None = None,
+        tool_registry: HermesToolRegistry | None = None,
     ) -> None:
         self.delegate_task = delegate_task
         self.parent_agent = parent_agent
         self.schema_path = Path(schema_path) if schema_path else PROJECT_ROOT / "schemas" / "stage3-executor-output.schema.json"
         self.executor_output: dict[str, Any] | None = None
+        self.tool_registry = tool_registry or HermesToolRegistry()
 
-    def run(self, plan: dict[str, Any]) -> dict[str, Any]:
+    def run(self, plan: dict[str, Any], *, previous_results: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         steps = list(plan.get("steps") or [])
         step_by_id = {step.get("id", ""): step for step in steps if step.get("id")}
-        pending = [step for step in steps if step.get("id")]
-        results: list[dict[str, Any]] = []
-        status_by_id: dict[str, str] = {}
+        completed = {r.get("step_id"): r for r in (previous_results or []) if r.get("status") == "done" and r.get("step_id") in step_by_id}
+        pending = [step for step in steps if step.get("id") and step.get("id") not in completed]
+        results: list[dict[str, Any]] = list(completed.values())
+        status_by_id: dict[str, str] = {str(step_id): "done" for step_id in completed}
 
         while pending:
             progressed = False
@@ -107,6 +112,11 @@ class Stage3Executor:
 
     def _execute_step(self, step: dict[str, Any]) -> dict[str, Any]:
         step_id = step["id"]
+        unavailable_toolsets = self.tool_registry.missing(list(step.get("toolsets") or []))
+        if unavailable_toolsets:
+            return self._skipped(step_id, f"missing or unsupported toolsets: {', '.join(unavailable_toolsets)}")
+        if step.get("requires_approval") and step.get("approval_status") != "approved":
+            return self._skipped(step_id, "side-effect step requires explicit approval")
         if self.delegate_task is None or self.parent_agent is None:
             return self._failed(step_id, DELEGATE_UNAVAILABLE_ERROR)
 
@@ -131,20 +141,22 @@ class Stage3Executor:
         raw_delegate_result = self.delegate_task(
             goal=(
                 f"Run Hermes Workflow Stage 3 Executor step_id={step_id} "
-                "Return one valid JSON string only with keys: step_id, status, output, error. "
+                "Return one valid JSON string only with keys: step_id, status, output, error, artifacts. "
                 "status must be done, failed, or skipped. No markdown, code fences, explanations, or surrounding text."
             ),
             context=(
                 "Execute this workflow plan step. Final response must be exactly one JSON object string matching:\n"
-                '{"step_id":"string","status":"done|failed|skipped","output":"string","error":"string|null"}\n\n'
+                '{"step_id":"string","status":"done|failed|skipped","output":"string","error":"string|null",'
+                '"artifacts":[{"type":"file|url|email|message|json|markdown|other","uri":"string","status":"created|verified|pending|missing","description":"string"}]}\n\n'
                 f"Step JSON:\n{json.dumps(step, ensure_ascii=False, indent=2)}"
             ),
-            toolsets=[],
+            toolsets=list(step.get("toolsets") or []),
             role="leaf",
             parent_agent=self.parent_agent,
         )
         summary = self._extract_delegate_summary(raw_delegate_result)
         data = parse_json_object(_strip_json_code_fence(summary.strip()))
+        data.setdefault("artifacts", [])
         validate_stage3_step_result(data)
         if data["step_id"] != step_id:
             raise ValidationError(f"stage3 step result step_id mismatch: expected {step_id}, got {data['step_id']}")
@@ -186,10 +198,10 @@ class Stage3Executor:
         }
 
     def _failed(self, step_id: str, error: str) -> dict[str, Any]:
-        return {"step_id": step_id, "status": "failed", "output": "", "error": error}
+        return {"step_id": step_id, "status": "failed", "output": "", "error": error, "artifacts": []}
 
     def _skipped(self, step_id: str, error: str) -> dict[str, Any]:
-        return {"step_id": step_id, "status": "skipped", "output": "", "error": error}
+        return {"step_id": step_id, "status": "skipped", "output": "", "error": error, "artifacts": []}
 
 
 def _strip_json_code_fence(text: str) -> str:

@@ -3,76 +3,54 @@
   "title": "Stage2Plan",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "status",
-    "summary",
-    "steps",
-    "risks",
-    "artifacts",
-    "blockers"
-  ],
+  "required": ["status", "summary", "steps", "risks", "artifacts", "blockers"],
   "properties": {
-    "status": {
-      "type": "string",
-      "enum": [
-        "ready",
-        "blocked"
-      ]
-    },
-    "summary": {
-      "type": "string"
-    },
+    "status": {"type": "string", "enum": ["ready", "blocked"]},
+    "summary": {"type": "string"},
     "steps": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "id",
-          "title",
-          "action",
-          "owner",
-          "depends_on"
-        ],
+        "required": ["id", "title", "action", "owner", "depends_on"],
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "action": {
-            "type": "string"
-          },
-          "owner": {
-            "type": "string"
-          },
-          "depends_on": {
+          "id": {"type": "string"},
+          "title": {"type": "string"},
+          "action": {"type": "string"},
+          "owner": {"type": "string"},
+          "depends_on": {"type": "array", "items": {"type": "string"}},
+          "toolsets": {"type": "array", "items": {"type": "string"}},
+          "expected_artifacts": {
             "type": "array",
             "items": {
-              "type": "string"
+              "anyOf": [
+                {"type": "string"},
+                {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "required": ["type", "uri"],
+                  "properties": {
+                    "type": {"type": "string"},
+                    "uri": {"type": "string"},
+                    "description": {"type": "string"}
+                  }
+                }
+              ]
             }
-          }
+          },
+          "verification": {
+            "anyOf": [
+              {"type": "array", "items": {"type": "string"}},
+              {"type": "object", "additionalProperties": true}
+            ]
+          },
+          "requires_approval": {"type": "boolean"},
+          "approval_status": {"type": "string", "enum": ["not_required", "pending", "approved", "rejected"]}
         }
       }
     },
-    "risks": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "artifacts": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "blockers": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    }
+    "risks": {"type": "array", "items": {"type": "string"}},
+    "artifacts": {"type": "array", "items": {"type": "string"}},
+    "blockers": {"type": "array", "items": {"type": "string"}}
   }
 }

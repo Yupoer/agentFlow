@@ -157,5 +157,153 @@ def test_executor_has_no_llm_fallback_when_delegate_unavailable():
             "status": "failed",
             "output": "",
             "error": "delegate_task unavailable; Stage 3 requires Hermes delegate_task",
+            "artifacts": [],
         }
     ]
+
+
+def test_executor_forwards_step_toolsets_to_delegate():
+    from runtime.executor import Stage3Executor
+
+    calls = []
+
+    def delegate(**kwargs):
+        calls.append(kwargs)
+        return _ok_delegate(**kwargs)
+
+    plan = {
+        "steps": [
+            {
+                "id": "search",
+                "title": "Search",
+                "action": "search web",
+                "owner": "hermes",
+                "depends_on": [],
+                "toolsets": ["web", "file"],
+            }
+        ]
+    }
+
+    output = Stage3Executor(delegate_task=delegate, parent_agent=object()).run(plan)
+
+    assert output["status"] == "ready"
+    assert calls[0]["toolsets"] == ["web", "file"]
+
+
+def test_executor_skips_unapproved_side_effect_without_delegate_call():
+    from runtime.executor import Stage3Executor
+
+    calls = []
+
+    def delegate(**kwargs):
+        calls.append(kwargs)
+        return _ok_delegate(**kwargs)
+
+    plan = {
+        "steps": [
+            {
+                "id": "send-email",
+                "title": "Send email",
+                "action": "send email",
+                "owner": "hermes",
+                "depends_on": [],
+                "requires_approval": True,
+                "approval_status": "pending",
+            }
+        ]
+    }
+
+    output = Stage3Executor(delegate_task=delegate, parent_agent=object()).run(plan)
+
+    assert calls == []
+    assert output["status"] == "partial"
+    assert output["step_results"][0]["status"] == "skipped"
+    assert output["step_results"][0]["error"] == "side-effect step requires explicit approval"
+
+
+def test_executor_skips_unknown_toolset_before_delegate_call():
+    from runtime.executor import Stage3Executor
+
+    calls = []
+
+    def delegate(**kwargs):
+        calls.append(kwargs)
+        return _ok_delegate(**kwargs)
+
+    plan = {
+        "steps": [
+            {
+                "id": "unknown-tool",
+                "title": "Use unknown tool",
+                "action": "use tool",
+                "owner": "hermes",
+                "depends_on": [],
+                "toolsets": ["not_installed_tool"],
+            }
+        ]
+    }
+
+    output = Stage3Executor(delegate_task=delegate, parent_agent=object()).run(plan)
+
+    assert calls == []
+    assert output["status"] == "partial"
+    assert output["step_results"][0]["status"] == "skipped"
+    assert "missing or unsupported toolsets" in output["step_results"][0]["error"]
+
+
+def test_executor_uses_injected_tool_registry_availability():
+    from runtime.executor import Stage3Executor
+
+    class Registry:
+        def missing(self, toolsets):
+            return [toolset for toolset in toolsets if toolset == "video"]
+
+    calls = []
+
+    def delegate(**kwargs):
+        calls.append(kwargs)
+        return _ok_delegate(**kwargs)
+
+    plan = {
+        "steps": [
+            {
+                "id": "video-step",
+                "title": "Use disabled tool",
+                "action": "use video",
+                "owner": "hermes",
+                "depends_on": [],
+                "toolsets": ["video"],
+            }
+        ]
+    }
+
+    output = Stage3Executor(delegate_task=delegate, parent_agent=object(), tool_registry=Registry()).run(plan)
+
+    assert calls == []
+    assert output["status"] == "partial"
+    assert output["step_results"][0]["status"] == "skipped"
+    assert "video" in output["step_results"][0]["error"]
+
+
+def test_executor_preserves_previous_done_results_and_reruns_only_unfinished():
+    from runtime.executor import Stage3Executor
+
+    calls = []
+
+    def delegate(**kwargs):
+        calls.append(kwargs["goal"].split("step_id=")[1].split()[0])
+        return _ok_delegate(**kwargs)
+
+    plan = {
+        "steps": [
+            {"id": "a", "title": "A", "action": "a", "owner": "hermes", "depends_on": []},
+            {"id": "b", "title": "B", "action": "b", "owner": "hermes", "depends_on": ["a"]},
+        ]
+    }
+    previous = [{"step_id": "a", "status": "done", "output": "done a", "error": None, "artifacts": []}]
+
+    output = Stage3Executor(delegate_task=delegate, parent_agent=object()).run(plan, previous_results=previous)
+
+    assert calls == ["b"]
+    assert output["status"] == "ready"
+    assert [r["step_id"] for r in output["step_results"]] == ["a", "b"]

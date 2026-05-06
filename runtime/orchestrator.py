@@ -10,7 +10,8 @@ try:
     from runtime.activation import parse_activation
     from runtime.executor import Stage3Executor
     from runtime.renderer import render_file
-    from runtime.state_store import JsonlStateStore, WorkflowState, compact_output
+    from runtime.state_store import JsonlStateStore, WorkflowState, compact_output, list_states
+    from runtime.templates import bind_template, list_templates, load_template
     from runtime.verifier import Stage4Verifier
     from runtime.writer import Stage5Writer
     from runtime.validator import (
@@ -25,7 +26,8 @@ except ModuleNotFoundError:
     from activation import parse_activation
     from executor import Stage3Executor
     from renderer import render_file
-    from state_store import JsonlStateStore, WorkflowState, compact_output
+    from state_store import JsonlStateStore, WorkflowState, compact_output, list_states
+    from templates import bind_template, list_templates, load_template
     from verifier import Stage4Verifier
     from writer import Stage5Writer
     from validator import (
@@ -90,6 +92,8 @@ class WorkflowOrchestrator:
             raw_input=activation.raw_input,
             user_input=activation.user_input,
         )
+        state.activation_trigger = activation.trigger
+        state.execution_requested = activation.execution_requested
         self._apply_stage3_preflight(state)
         return state
 
@@ -97,6 +101,85 @@ class WorkflowOrchestrator:
         state.stage3_available = self.delegate_task is not None and self.parent_agent is not None
         state.execution_mode = "delegated" if state.stage3_available else "standalone"
         state.partial_reason = "" if state.stage3_available else STAGE3_DELEGATE_UNAVAILABLE_REASON
+
+
+    def list_workflows(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "workflow_id": row.get("workflow_id"),
+                "status": row.get("status"),
+                "objective": row.get("objective"),
+                "summary": row.get("summary"),
+                "updated_at": row.get("updated_at"),
+            }
+            for row in list_states(self.state_store)
+        ]
+
+    def list_templates(self) -> list[dict[str, Any]]:
+        return list_templates(self.root / "workflows")
+
+    def run_template(self, template: str, inputs: dict[str, Any] | None = None) -> dict[str, Any]:
+        plan = bind_template(load_template(template, self.root / "workflows"), inputs or {})
+        state = WorkflowState.create(mode="workflow", raw_input=f"template:{template}", user_input=json.dumps(inputs or {}, ensure_ascii=False))
+        state.activation_trigger = "template"
+        state.normalized_request = {
+            "status": "ready",
+            "objective": plan["summary"],
+            "constraints": [],
+            "context": {"template": template, "inputs": inputs or {}},
+            "success_criteria": plan.get("artifacts") or [],
+            "blockers": [],
+        }
+        state.objective = plan["summary"]
+        state.plan = plan
+        state.summary = plan["summary"]
+        state.steps = plan["steps"]
+        state.risks = plan["risks"]
+        state.blockers = []
+        self._apply_stage3_preflight(state)
+        try:
+            output = self._continue_from_state(state)
+            self.state_store.append(state)
+            return output
+        except LLMQuotaExceededError as exc:
+            return self._blocked_for_quota(state, getattr(exc, "executor_output", None))
+
+    def approve(self, workflow_id: str, step_id: str) -> dict[str, Any]:
+        row = self.state_store.get(workflow_id)
+        if row is None:
+            state = WorkflowState.create(mode="workflow", raw_input="approve", user_input="approve")
+            self._apply_stage3_preflight(state)
+            state.status = "error"
+            state.errors = [f"workflow not found: {workflow_id}"]
+            state.final_output = Stage5Writer(schema_path=self.root / "schemas" / "stage5-final-output.schema.json").run(state)
+            return compact_output(state)
+
+        state = WorkflowState.from_dict(row)
+        found = False
+        if state.plan:
+            for step in state.plan.get("steps") or []:
+                if step.get("id") == step_id:
+                    step["requires_approval"] = True
+                    step["approval_status"] = "approved"
+                    found = True
+        if not found:
+            state.status = "error"
+            state.errors = [f"step not found for approval: {step_id}"]
+            state.final_output = Stage5Writer(schema_path=self.root / "schemas" / "stage5-final-output.schema.json").run(state)
+            self.state_store.append(state)
+            return compact_output(state)
+
+        # Approval changes execution eligibility; keep completed step results and rerun only unfinished/skipped/failed steps.
+        state.executor_output = None
+        state.executor_results = [result for result in state.executor_results if result.get("status") == "done"]
+        state.verifier_output = None
+        state.final_output = None
+        state.blockers = []
+        state.errors = []
+        self._apply_stage3_preflight(state)
+        output = self._continue_from_state(state)
+        self.state_store.append(state)
+        return output
 
     def resume(self, workflow_id: str | None = None) -> dict[str, Any]:
         row = self.state_store.get(workflow_id)
@@ -180,12 +263,17 @@ class WorkflowOrchestrator:
                 ).run(state)
                 return compact_output(state)
 
+        if state.plan and not state.execution_requested:
+            state.status = "ready"
+            state.blockers = []
+            return compact_output(state)
+
         if state.plan and not state.executor_output:
             executor_output = Stage3Executor(
                 delegate_task=self.delegate_task,
                 parent_agent=self.parent_agent,
                 schema_path=self.root / "schemas" / "stage3-executor-output.schema.json",
-            ).run(state.plan)
+            ).run(state.plan, previous_results=state.executor_results)
             state.executor_output = executor_output
             state.executor_results = executor_output["step_results"]
 
@@ -259,12 +347,17 @@ class WorkflowOrchestrator:
                 self.state_store.append(state)
                 return compact_output(state)
 
+            if not state.execution_requested:
+                state.status = "ready"
+                self.state_store.append(state)
+                return compact_output(state)
+
             if plan["steps"]:
                 executor_output = Stage3Executor(
                     delegate_task=self.delegate_task,
                     parent_agent=self.parent_agent,
                     schema_path=self.root / "schemas" / "stage3-executor-output.schema.json",
-                ).run(plan)
+                ).run(plan, previous_results=state.executor_results)
                 state.executor_output = executor_output
                 state.executor_results = executor_output["step_results"]
                 verifier_output = Stage4Verifier(

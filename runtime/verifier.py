@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
-
 try:
+    from runtime.artifact_verifiers import artifact_failure
     from runtime.validator import validate_stage_output
 except ModuleNotFoundError:
+    from artifact_verifiers import artifact_failure
     from validator import validate_stage_output
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -43,7 +44,10 @@ class Stage4Verifier:
         step_id = str(result.get("step_id") or "")
         status = result.get("status")
         if status == "done" and str(result.get("output") or "").strip():
-            return {"step_id": step_id, "verdict": "pass", "reason": "done step produced output"}
+            artifact_failure = self._artifact_failure(result)
+            if artifact_failure:
+                return {"step_id": step_id, "verdict": "fail", "reason": artifact_failure}
+            return {"step_id": step_id, "verdict": "pass", "reason": "done step produced output and artifacts verified"}
         if status == "done":
             return {"step_id": step_id, "verdict": "fail", "reason": "done step has empty output"}
         if status == "failed":
@@ -51,6 +55,13 @@ class Stage4Verifier:
         if status == "skipped":
             return {"step_id": step_id, "verdict": "skipped", "reason": str(result.get("error") or "step skipped")}
         return {"step_id": step_id, "verdict": "fail", "reason": f"unknown step_result status: {status}"}
+
+    def _artifact_failure(self, result: dict[str, Any]) -> str:
+        for artifact in result.get("artifacts") or []:
+            failure = artifact_failure(artifact)
+            if failure:
+                return failure
+        return ""
 
     def _status(self, executor_output: dict[str, Any], verdicts: list[dict[str, str]], blockers: list[str]) -> str:
         if executor_output.get("status") == "blocked" or executor_output.get("blockers"):
