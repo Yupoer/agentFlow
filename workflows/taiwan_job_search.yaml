@@ -1,0 +1,173 @@
+{
+  "name": "taiwan_job_search",
+  "description": "Collect, normalize, score, classify, and report Taiwan software jobs using the user's backend/AI-application strategy.",
+  "inputs": {
+    "keywords": {
+      "required": false,
+      "default": "後端工程師, Python backend, Django, FastAPI, AI application engineer"
+    },
+    "sources": {
+      "required": false,
+      "default": "104,1111,Cake,Yourator,LinkedIn Jobs"
+    },
+    "locations": {
+      "required": false,
+      "default": "南港,內湖,台北,remote,hybrid"
+    },
+    "salary_min": {
+      "required": false,
+      "default": "45000"
+    },
+    "max_jobs": {
+      "required": false,
+      "default": "30"
+    },
+    "output_dir": {
+      "required": false,
+      "default": "/tmp/taiwan-job-search"
+    }
+  },
+  "summary": "Search {{sources}} for {{keywords}} around {{locations}}, score up to {{max_jobs}} jobs, and write reports to {{output_dir}}.",
+  "artifacts": [
+    "{{output_dir}}/raw_jobs.json",
+    "{{output_dir}}/normalized_jobs.json",
+    "{{output_dir}}/scored_jobs.json",
+    "{{output_dir}}/ranked_jobs.md",
+    "{{output_dir}}/final_report.md"
+  ],
+  "risks": [
+    "104/1111 may block automation or require semi-manual URL input",
+    "Unknown salary/remote/employment fields must not be guessed"
+  ],
+  "steps": [
+    {
+      "id": "collect_jobs",
+      "title": "Collect job postings",
+      "action": "Collect up to {{max_jobs}} Taiwan software job postings from {{sources}} for {{keywords}} around {{locations}}. Preserve URL, source, fetch time, and raw text. Write {{output_dir}}/raw_jobs.json.",
+      "owner": "hermes",
+      "depends_on": [],
+      "toolsets": [
+        "browser",
+        "web",
+        "terminal",
+        "file"
+      ],
+      "expected_artifacts": [
+        "{{output_dir}}/raw_jobs.json"
+      ],
+      "verification": [
+        "raw_jobs.json exists",
+        "each job has source/url/title/company when available"
+      ],
+      "requires_approval": false,
+      "approval_status": "not_required"
+    },
+    {
+      "id": "normalize_jobs",
+      "title": "Normalize job objects",
+      "action": "Normalize raw job data into the job-object schema. Mark missing salary, remote policy, employment type, and culture details as unknown. Write {{output_dir}}/normalized_jobs.json.",
+      "owner": "hermes",
+      "depends_on": [
+        "collect_jobs"
+      ],
+      "toolsets": [
+        "terminal",
+        "file"
+      ],
+      "expected_artifacts": [
+        "{{output_dir}}/normalized_jobs.json"
+      ],
+      "verification": [
+        "normalized_jobs.json parses",
+        "unknowns are explicit"
+      ],
+      "requires_approval": false,
+      "approval_status": "not_required"
+    },
+    {
+      "id": "enrich_company_context",
+      "title": "Enrich company context",
+      "action": "For promising jobs, research company website and public signals. Do not over-search low-priority jobs. Update context in {{output_dir}}/normalized_jobs.json or write {{output_dir}}/company_context.json.",
+      "owner": "hermes",
+      "depends_on": [
+        "normalize_jobs"
+      ],
+      "toolsets": [
+        "web",
+        "file"
+      ],
+      "expected_artifacts": [
+        "{{output_dir}}/company_context.json"
+      ],
+      "verification": [
+        "source URLs preserved",
+        "uncertain context marked as unknown"
+      ],
+      "requires_approval": false,
+      "approval_status": "not_required"
+    },
+    {
+      "id": "score_jobs",
+      "title": "Score jobs",
+      "action": "Apply taiwan-job-search-coach scoring rubric: technical fit, growth, workload risk, salary, location, culture, honesty risk. Write {{output_dir}}/scored_jobs.json.",
+      "owner": "hermes",
+      "depends_on": [
+        "enrich_company_context"
+      ],
+      "toolsets": [
+        "file",
+        "terminal"
+      ],
+      "expected_artifacts": [
+        "{{output_dir}}/scored_jobs.json"
+      ],
+      "verification": [
+        "each score has total/category/breakdown/confidence"
+      ],
+      "requires_approval": false,
+      "approval_status": "not_required"
+    },
+    {
+      "id": "classify_jobs",
+      "title": "Classify and rank jobs",
+      "action": "Classify jobs into 主投, 條件式投, 練面試, 不建議, 排除. Write {{output_dir}}/ranked_jobs.md using Discord-friendly code blocks.",
+      "owner": "hermes",
+      "depends_on": [
+        "score_jobs"
+      ],
+      "toolsets": [
+        "file"
+      ],
+      "expected_artifacts": [
+        "{{output_dir}}/ranked_jobs.md"
+      ],
+      "verification": [
+        "all five categories represented when applicable",
+        "red flags included"
+      ],
+      "requires_approval": false,
+      "approval_status": "not_required"
+    },
+    {
+      "id": "write_final_report",
+      "title": "Write final report",
+      "action": "Write {{output_dir}}/final_report.md with selected workflow, ranked jobs, red flags, unknowns, recommended next actions, and verification summary.",
+      "owner": "hermes",
+      "depends_on": [
+        "classify_jobs"
+      ],
+      "toolsets": [
+        "file"
+      ],
+      "expected_artifacts": [
+        "{{output_dir}}/final_report.md"
+      ],
+      "verification": [
+        "final_report.md exists",
+        "contains next action and verification summary"
+      ],
+      "requires_approval": false,
+      "approval_status": "not_required"
+    }
+  ]
+}
