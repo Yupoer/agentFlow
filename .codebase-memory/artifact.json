@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "commit": "9814f00b717b97ec118324f4abb57ac0fa421cbb",
+    "indexed_at": "2026-05-24T09:12:52Z",
+    "project": "home-qza-hermes-workflow",
+    "nodes": 486,
+    "edges": 1350,
+    "original_size": 2818048,
+    "compressed_size": 407789,
+    "compression_level": 3
+}
