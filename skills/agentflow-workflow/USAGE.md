@@ -1,4 +1,4 @@
-# Hermes Workflow Usage
+# AgentFlow Workflow Usage
 
 ## Quick Start
 
@@ -18,7 +18,7 @@ action: 建 / 建立 / 設計 / 規劃 / plan / 拆步驟 / 先給我計劃
 Example:
 
 ```text
-我現在要你建一個關於 backend SWE interview prep 的 workflow，先給我看，我修正後再建立
+我現在要你建一個關於 incident response 的 workflow，先給我看，我修正後再建立
 ```
 
 This routes to workflow mode and sets:

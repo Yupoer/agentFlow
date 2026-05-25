@@ -145,7 +145,7 @@ standalone
 
 delegated
 - has live parent_agent + delegate_task
-- Stage 3 can execute plan steps through Hermes subagents
+- Stage 3 can execute plan steps through runtime subagents
 ```
 
 ## Workflow state and resume
@@ -153,7 +153,7 @@ delegated
 Workflow state is appended to JSONL:
 
 ```text
-.hermes-workflow-state.jsonl
+.agentflow-workflow-state.jsonl
 ```
 
 Resume behavior:
@@ -184,9 +184,6 @@ workflows/*.yaml
 Current examples include:
 
 - `research_email_digest.yaml`
-- `taiwan_job_search.yaml`
-- `taiwan_job_interview_prep.yaml`
-- `taiwan_job_application_batch.yaml`
 
 ## Demos
 
@@ -216,7 +213,7 @@ runtime/                  workflow runtime implementation
 schemas/                  Stage 1-5 JSON schemas
 prompts/                  Stage 1/2 prompt templates
 kernel/                   kernel and routing rules
-skills/hermes-workflow/   optional Hermes Agent skill draft and usage notes
+skills/agentflow-workflow/   optional AgentFlow skill draft and usage notes
 workflows/                reusable workflow templates
 demos/                    generated workflow demo artifacts
 tests/                    pytest coverage
@@ -225,7 +222,7 @@ manifest.json             runtime manifest
 
 ## Current status
 
-This is an MVP / personal prototype, not a production-grade distributed workflow platform.
+This is an MVP / research prototype, not a production-grade distributed workflow platform.
 
 Implemented core capabilities:
 

@@ -87,7 +87,7 @@ def compact_output(state: WorkflowState) -> dict[str, Any]:
 
 
 class JsonlStateStore:
-    def __init__(self, path: str | Path = ".hermes-workflow-state.jsonl") -> None:
+    def __init__(self, path: str | Path = ".agentflow-workflow-state.jsonl") -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
 

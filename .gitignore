@@ -1,4 +1,4 @@
 __pycache__/
 *.pyc
-.hermes-workflow-state.jsonl
+.agentflow-workflow-state.jsonl
 .pytest_cache/

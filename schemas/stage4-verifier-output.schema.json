@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Hermes Workflow Stage 4 Verifier Output",
+  "title": "AgentFlow Workflow Stage 4 Verifier Output",
   "type": "object",
   "required": ["status", "verdicts", "summary", "blockers"],
   "additionalProperties": false,

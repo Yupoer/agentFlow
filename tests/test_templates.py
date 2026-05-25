@@ -49,7 +49,7 @@ def test_install_and_edit_template(tmp_path):
                 "description": "old",
                 "summary": "Do daily digest",
                 "steps": [
-                    {"id": "write", "title": "Write", "action": "write", "owner": "hermes", "depends_on": []}
+                    {"id": "write", "title": "Write", "action": "write", "owner": "agentflow", "depends_on": []}
                 ],
             }
         ),

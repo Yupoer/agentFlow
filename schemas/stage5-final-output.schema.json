@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Hermes Workflow Stage 5 Final Output",
+  "title": "AgentFlow Workflow Stage 5 Final Output",
   "type": "object",
   "required": [
     "status",

@@ -12,7 +12,7 @@ def _stage_llm(prompt: str) -> str:
                 "status": "ready",
                 "summary": "review-first plan",
                 "steps": [
-                    {"id": "step-1", "title": "Draft", "action": "draft plan", "owner": "hermes", "depends_on": []},
+                    {"id": "step-1", "title": "Draft", "action": "draft plan", "owner": "agentflow", "depends_on": []},
                 ],
                 "risks": [],
                 "artifacts": ["plan"],
@@ -23,7 +23,7 @@ def _stage_llm(prompt: str) -> str:
     return json.dumps(
         {
             "status": "ready",
-            "objective": "Create backend SWE interview prep workflow",
+            "objective": "Create incident response workflow",
             "constraints": ["review before build"],
             "context": {},
             "success_criteria": ["plan is reviewable"],
@@ -48,7 +48,7 @@ def test_explicit_prefix_has_priority_and_extracts_payload():
 def test_semantic_detector_requires_workflow_intent_and_action_terms():
     from runtime.activation import parse_activation
 
-    result = parse_activation("我現在要你建一個關於 backend swe interview prep 的 workflow")
+    result = parse_activation("我現在要你建一個關於 incident response 的 workflow")
 
     assert result.mode == "workflow"
     assert result.activated is True
@@ -80,13 +80,13 @@ def test_orchestrator_plan_only_semantic_request_stops_after_stage2(tmp_path):
         llm=_stage_llm,
         use_delegate=False,
         state_path=tmp_path / "state.jsonl",
-    ).run("我現在要你建一個關於 backend swe interview prep 的 workflow，先給我看，我修正後再建立")
+    ).run("我現在要你建一個關於 incident response 的 workflow，先給我看，我修正後再建立")
 
     assert result["status"] == "ready"
     assert result["activation_trigger"] == "semantic_detector"
     assert result["execution"] is False
     assert result["execution_requested"] is False
-    assert result["objective"] == "Create backend SWE interview prep workflow"
+    assert result["objective"] == "Create incident response workflow"
     assert result["summary"] == "review-first plan"
     assert result["executor_output"] is None
 

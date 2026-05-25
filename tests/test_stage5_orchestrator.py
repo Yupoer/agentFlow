@@ -27,7 +27,7 @@ def test_orchestrator_runs_stage5_and_compact_output_prefers_final_output(tmp_pa
                     "status": "ready",
                     "summary": "assemble final output",
                     "steps": [
-                        {"id": "a", "title": "A", "action": "run a", "owner": "hermes", "depends_on": []},
+                        {"id": "a", "title": "A", "action": "run a", "owner": "agentflow", "depends_on": []},
                     ],
                     "risks": [],
                     "artifacts": [],

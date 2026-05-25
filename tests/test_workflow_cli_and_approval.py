@@ -5,7 +5,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
-def test_approve_marks_step_approved_and_reruns(tmp_path):
+def test_approve_marks_step_approved_and_reruns(tmp_path, monkeypatch):
+    monkeypatch.setenv("AGENTFLOW_TOOLSETS", "web,file,terminal")
     from runtime.orchestrator import WorkflowOrchestrator
 
     state_path = tmp_path / "state.jsonl"

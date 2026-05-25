@@ -1,4 +1,4 @@
-Hermes Workflow Kernel
+AgentFlow Workflow Kernel
 
 Rules:
 - Runtime executability has priority over documentation completeness.

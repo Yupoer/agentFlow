@@ -3,9 +3,9 @@
   "execution_requested": true,
   "status": "artifacts_written",
   "artifacts": [
-    "/mnt/c/Users/Desktop/workflow/langgraph.json",
-    "/mnt/c/Users/Desktop/workflow/prefect.json",
-    "/mnt/c/Users/Desktop/workflow/temporal.json",
-    "/mnt/c/Users/Desktop/workflow/comparison.md"
+    "./langgraph.json",
+    "./prefect.json",
+    "./temporal.json",
+    "./comparison.md"
   ]
 }

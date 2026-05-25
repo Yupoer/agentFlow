@@ -27,8 +27,8 @@ def test_orchestrator_runs_stage3_and_writes_executor_output(tmp_path):
                     "status": "ready",
                     "summary": "execute two steps",
                     "steps": [
-                        {"id": "a", "title": "A", "action": "run a", "owner": "hermes", "depends_on": []},
-                        {"id": "b", "title": "B", "action": "run b", "owner": "hermes", "depends_on": ["a"]},
+                        {"id": "a", "title": "A", "action": "run a", "owner": "agentflow", "depends_on": []},
+                        {"id": "b", "title": "B", "action": "run b", "owner": "agentflow", "depends_on": ["a"]},
                     ],
                     "risks": [],
                     "artifacts": [],
@@ -75,9 +75,9 @@ def test_orchestrator_stage3_quota_blocks_and_writes_progress(tmp_path, monkeypa
                     "status": "ready",
                     "summary": "quota after first step",
                     "steps": [
-                        {"id": "a", "title": "A", "action": "run a", "owner": "hermes", "depends_on": []},
-                        {"id": "b", "title": "B", "action": "quota b", "owner": "hermes", "depends_on": []},
-                        {"id": "c", "title": "C", "action": "never c", "owner": "hermes", "depends_on": []},
+                        {"id": "a", "title": "A", "action": "run a", "owner": "agentflow", "depends_on": []},
+                        {"id": "b", "title": "B", "action": "quota b", "owner": "agentflow", "depends_on": []},
+                        {"id": "c", "title": "C", "action": "never c", "owner": "agentflow", "depends_on": []},
                     ],
                     "risks": [],
                     "artifacts": [],

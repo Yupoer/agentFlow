@@ -33,7 +33,7 @@ def _stage2() -> str:
                     "id": "step-1",
                     "title": "Retry",
                     "action": "Retry transient LLM failures",
-                    "owner": "hermes",
+                    "owner": "agentflow",
                     "depends_on": [],
                 }
             ],

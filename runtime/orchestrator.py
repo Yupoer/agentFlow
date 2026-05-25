@@ -40,25 +40,14 @@ except ModuleNotFoundError:
     )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-HERMES_AGENT_ROOT = Path.home() / ".hermes" / "hermes-agent"
 LLM_QUOTA_BLOCKED_REASON = "LLM quota exceeded, workflow paused"
-STAGE3_DELEGATE_UNAVAILABLE_REASON = "delegate_task unavailable; Stage 3 requires Hermes delegate_task"
+STAGE3_DELEGATE_UNAVAILABLE_REASON = "delegate_task unavailable; Stage 3 requires delegate_task"
 
 DelegateTaskFn = Callable[..., str]
 LlmFn = Callable[[str], str]
 
 
 def _load_native_delegate_task() -> DelegateTaskFn | None:
-    try:
-        from tools.delegate_tool import delegate_task
-
-        return delegate_task
-    except Exception:
-        pass
-
-    if HERMES_AGENT_ROOT.exists() and str(HERMES_AGENT_ROOT) not in sys.path:
-        sys.path.insert(0, str(HERMES_AGENT_ROOT))
-
     try:
         from tools.delegate_tool import delegate_task
 
@@ -83,7 +72,7 @@ class WorkflowOrchestrator:
         self.parent_agent = parent_agent
         self.use_delegate = use_delegate
         self.root = Path(project_root) if project_root else PROJECT_ROOT
-        self.state_store = JsonlStateStore(state_path or self.root / ".hermes-workflow-state.jsonl")
+        self.state_store = JsonlStateStore(state_path or self.root / ".agentflow-workflow-state.jsonl")
 
     def _new_state_with_stage3_preflight(self, message: str) -> WorkflowState:
         activation = parse_activation(message)
@@ -459,7 +448,7 @@ class WorkflowOrchestrator:
             return None
 
         goal = (
-            f"Run Hermes Workflow {stage_name}. Return the stage output as one valid JSON string only. "
+            f"Run AgentFlow Workflow {stage_name}. Return the stage output as one valid JSON string only. "
             "Do not add markdown, code fences, explanations, or surrounding text."
         )
         context = (
@@ -530,19 +519,19 @@ def demo_llm(prompt: str) -> str:
                         "id": "step-1",
                         "title": "Create MVP files",
                         "action": "Write runtime, schemas, prompts, kernel files, and skill files.",
-                        "owner": "hermes",
+                        "owner": "agentflow",
                         "depends_on": [],
                     },
                     {
                         "id": "step-2",
                         "title": "Run smoke tests",
                         "action": "Validate Python syntax, JSON files, and orchestrator output.",
-                        "owner": "hermes",
+                        "owner": "agentflow",
                         "depends_on": ["step-1"],
                     },
                 ],
                 "risks": [],
-                "artifacts": ["hermes-workflow"],
+                "artifacts": ["agentflow-workflow"],
                 "blockers": [],
             },
             ensure_ascii=False,
@@ -550,7 +539,7 @@ def demo_llm(prompt: str) -> str:
     return json.dumps(
         {
             "status": "ready",
-            "objective": "Build a minimal executable Hermes workflow runtime.",
+            "objective": "Build a minimal executable AgentFlow workflow runtime.",
             "constraints": ["code-first", "minimal files", "schema validated"],
             "context": {},
             "success_criteria": ["Python syntax passes", "JSON validates", "workflow returns compact output"],

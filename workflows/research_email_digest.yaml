@@ -4,7 +4,7 @@
   "inputs": {
     "topic": {"required": true, "description": "Research topic"},
     "recipient": {"required": true, "description": "Email recipient"},
-    "output_path": {"required": false, "default": "/tmp/hermes-workflow-digest.md"}
+    "output_path": {"required": false, "default": "/tmp/agentflow-workflow-digest.md"}
   },
   "summary": "Research {{topic}}, write digest to {{output_path}}, then draft email to {{recipient}}.",
   "artifacts": ["{{output_path}}", "email:{{recipient}}"],
@@ -14,7 +14,7 @@
       "id": "search",
       "title": "Search web sources",
       "action": "Search the web for current reliable sources about {{topic}}. Return URLs and source notes.",
-      "owner": "hermes",
+      "owner": "agentflow",
       "depends_on": [],
       "toolsets": ["web"],
       "expected_artifacts": ["source URLs"],
@@ -26,7 +26,7 @@
       "id": "write_digest",
       "title": "Write digest",
       "action": "Use the sources from search to write a concise Markdown digest to {{output_path}}.",
-      "owner": "hermes",
+      "owner": "agentflow",
       "depends_on": ["search"],
       "toolsets": ["file"],
       "expected_artifacts": ["{{output_path}}"],
@@ -38,7 +38,7 @@
       "id": "send_email",
       "title": "Send email",
       "action": "Send the digest at {{output_path}} to {{recipient}} with a clear subject. If approval is not granted, do not send; draft only.",
-      "owner": "hermes",
+      "owner": "agentflow",
       "depends_on": ["write_digest"],
       "toolsets": ["terminal"],
       "expected_artifacts": ["email message id or sent log for {{recipient}}"],

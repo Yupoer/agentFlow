@@ -38,13 +38,13 @@ def test_resume_from_blocked_after_stage2_continues_at_stage3(tmp_path):
         plan={
             "status": "ready",
             "summary": "resume plan",
-            "steps": [{"id": "a", "title": "A", "action": "run a", "owner": "hermes", "depends_on": []}],
+            "steps": [{"id": "a", "title": "A", "action": "run a", "owner": "agentflow", "depends_on": []}],
             "risks": [],
             "artifacts": [],
             "blockers": [],
         },
         summary="resume plan",
-        steps=[{"id": "a", "title": "A", "action": "run a", "owner": "hermes", "depends_on": []}],
+        steps=[{"id": "a", "title": "A", "action": "run a", "owner": "agentflow", "depends_on": []}],
         blockers=["LLM quota exceeded, workflow paused"],
     )
 

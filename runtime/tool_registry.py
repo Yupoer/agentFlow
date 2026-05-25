@@ -2,28 +2,27 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import subprocess
-import sys
-from pathlib import Path
-from typing import Any
-
-HERMES_AGENT_ROOT = Path.home() / ".hermes" / "hermes-agent"
 
 
 class ToolRegistryError(RuntimeError):
     pass
 
 
-class HermesToolRegistry:
-    """Best-effort adapter around Hermes' real toolset registry/config.
+class ToolRegistry:
+    """Best-effort adapter around a host application's toolset registry.
 
-    Prefer importing Hermes source when available; fall back to `hermes tools list`
-    so the workflow runtime can still make deterministic availability decisions
-    outside the main Hermes process.
+    This runtime is host-agnostic. Tool availability can be supplied by either:
+
+    - `AGENTFLOW_TOOLSETS`: comma-separated enabled toolsets.
+    - `AGENTFLOW_TOOLS_COMMAND`: command that prints enabled/disabled toolsets.
+
+    If neither is configured, no external toolsets are assumed available.
     """
 
-    def __init__(self, *, hermes_root: str | Path | None = None, platform: str = "cli") -> None:
-        self.hermes_root = Path(hermes_root) if hermes_root else HERMES_AGENT_ROOT
+    def __init__(self, *, tools_command: str | None = None, platform: str = "cli") -> None:
+        self.tools_command = tools_command or os.environ.get("AGENTFLOW_TOOLS_COMMAND")
         self.platform = platform
         self._toolsets: dict[str, bool] | None = None
 
@@ -45,37 +44,29 @@ class HermesToolRegistry:
         return sorted(set(missing))
 
     def _load_toolsets(self) -> dict[str, bool]:
-        # CLI output includes the user's enabled/disabled state; source import is
-        # only a fallback for test/dev environments where the Hermes CLI is absent.
-        loaded = self._load_from_cli()
+        loaded = self._load_from_env()
         if loaded:
             return loaded
-        loaded = self._load_from_hermes_source()
+        loaded = self._load_from_command()
         if loaded:
             return loaded
         return {}
 
-    def _load_from_hermes_source(self) -> dict[str, bool]:
-        if not self.hermes_root.exists():
-            return {}
-        if str(self.hermes_root) not in sys.path:
-            sys.path.insert(0, str(self.hermes_root))
-        try:
-            from toolsets import get_all_toolsets  # type: ignore
-        except Exception:
-            return {}
-        try:
-            names = get_all_toolsets()
-        except Exception:
-            return {}
-        if isinstance(names, dict):
-            return {_canonical_toolset(name): True for name in names}
-        return {_canonical_toolset(str(name)): True for name in names}
+    def _load_from_env(self) -> dict[str, bool]:
+        raw = os.environ.get("AGENTFLOW_TOOLSETS", "")
+        output: dict[str, bool] = {}
+        for name in raw.split(","):
+            name = name.strip()
+            if name:
+                output[_canonical_toolset(name)] = True
+        return output
 
-    def _load_from_cli(self) -> dict[str, bool]:
+    def _load_from_command(self) -> dict[str, bool]:
+        if not self.tools_command:
+            return {}
         try:
             proc = subprocess.run(
-                ["hermes", "tools", "list"],
+                shlex.split(self.tools_command),
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
@@ -91,6 +82,10 @@ class HermesToolRegistry:
             match = re.search(r"(?P<enabled>[✓✗])\s+(?:enabled|disabled)\s+(?P<name>[a-zA-Z0-9_-]+)\b", line)
             if match:
                 output[_canonical_toolset(match.group("name"))] = match.group("enabled") == "✓"
+                continue
+            bare = line.strip()
+            if re.fullmatch(r"[a-zA-Z0-9_-]+", bare):
+                output[_canonical_toolset(bare)] = True
         return output
 
 

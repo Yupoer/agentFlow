@@ -44,9 +44,9 @@ def test_executor_runs_steps_in_dependency_order(monkeypatch):
 
     plan = {
         "steps": [
-            {"id": "c", "title": "C", "action": "run c", "owner": "hermes", "depends_on": ["b"]},
-            {"id": "a", "title": "A", "action": "run a", "owner": "hermes", "depends_on": []},
-            {"id": "b", "title": "B", "action": "run b", "owner": "hermes", "depends_on": ["a"]},
+            {"id": "c", "title": "C", "action": "run c", "owner": "agentflow", "depends_on": ["b"]},
+            {"id": "a", "title": "A", "action": "run a", "owner": "agentflow", "depends_on": []},
+            {"id": "b", "title": "B", "action": "run b", "owner": "agentflow", "depends_on": ["a"]},
         ]
     }
 
@@ -72,9 +72,9 @@ def test_executor_marks_failed_step_and_skips_dependents_but_runs_independent(mo
 
     plan = {
         "steps": [
-            {"id": "a", "title": "A", "action": "fail a", "owner": "hermes", "depends_on": []},
-            {"id": "b", "title": "B", "action": "depends a", "owner": "hermes", "depends_on": ["a"]},
-            {"id": "x", "title": "X", "action": "independent", "owner": "hermes", "depends_on": []},
+            {"id": "a", "title": "A", "action": "fail a", "owner": "agentflow", "depends_on": []},
+            {"id": "b", "title": "B", "action": "depends a", "owner": "agentflow", "depends_on": ["a"]},
+            {"id": "x", "title": "X", "action": "independent", "owner": "agentflow", "depends_on": []},
         ]
     }
 
@@ -103,7 +103,7 @@ def test_executor_retries_timeout_then_succeeds(monkeypatch):
 
     plan = {
         "steps": [
-            {"id": "a", "title": "A", "action": "retry a", "owner": "hermes", "depends_on": []},
+            {"id": "a", "title": "A", "action": "retry a", "owner": "agentflow", "depends_on": []},
         ]
     }
 
@@ -128,8 +128,8 @@ def test_executor_quota_raises_pause_immediately(monkeypatch):
 
     plan = {
         "steps": [
-            {"id": "a", "title": "A", "action": "quota", "owner": "hermes", "depends_on": []},
-            {"id": "b", "title": "B", "action": "never", "owner": "hermes", "depends_on": []},
+            {"id": "a", "title": "A", "action": "quota", "owner": "agentflow", "depends_on": []},
+            {"id": "b", "title": "B", "action": "never", "owner": "agentflow", "depends_on": []},
         ]
     }
 
@@ -144,7 +144,7 @@ def test_executor_has_no_llm_fallback_when_delegate_unavailable():
 
     plan = {
         "steps": [
-            {"id": "a", "title": "A", "action": "run a", "owner": "hermes", "depends_on": []},
+            {"id": "a", "title": "A", "action": "run a", "owner": "agentflow", "depends_on": []},
         ]
     }
 
@@ -156,13 +156,14 @@ def test_executor_has_no_llm_fallback_when_delegate_unavailable():
             "step_id": "a",
             "status": "failed",
             "output": "",
-            "error": "delegate_task unavailable; Stage 3 requires Hermes delegate_task",
+            "error": "delegate_task unavailable; Stage 3 requires delegate_task",
             "artifacts": [],
         }
     ]
 
 
-def test_executor_forwards_step_toolsets_to_delegate():
+def test_executor_forwards_step_toolsets_to_delegate(monkeypatch):
+    monkeypatch.setenv("AGENTFLOW_TOOLSETS", "web,file")
     from runtime.executor import Stage3Executor
 
     calls = []
@@ -177,7 +178,7 @@ def test_executor_forwards_step_toolsets_to_delegate():
                 "id": "search",
                 "title": "Search",
                 "action": "search web",
-                "owner": "hermes",
+                "owner": "agentflow",
                 "depends_on": [],
                 "toolsets": ["web", "file"],
             }
@@ -205,7 +206,7 @@ def test_executor_skips_unapproved_side_effect_without_delegate_call():
                 "id": "send-email",
                 "title": "Send email",
                 "action": "send email",
-                "owner": "hermes",
+                "owner": "agentflow",
                 "depends_on": [],
                 "requires_approval": True,
                 "approval_status": "pending",
@@ -236,7 +237,7 @@ def test_executor_skips_unknown_toolset_before_delegate_call():
                 "id": "unknown-tool",
                 "title": "Use unknown tool",
                 "action": "use tool",
-                "owner": "hermes",
+                "owner": "agentflow",
                 "depends_on": [],
                 "toolsets": ["not_installed_tool"],
             }
@@ -270,7 +271,7 @@ def test_executor_uses_injected_tool_registry_availability():
                 "id": "video-step",
                 "title": "Use disabled tool",
                 "action": "use video",
-                "owner": "hermes",
+                "owner": "agentflow",
                 "depends_on": [],
                 "toolsets": ["video"],
             }
@@ -296,8 +297,8 @@ def test_executor_preserves_previous_done_results_and_reruns_only_unfinished():
 
     plan = {
         "steps": [
-            {"id": "a", "title": "A", "action": "a", "owner": "hermes", "depends_on": []},
-            {"id": "b", "title": "B", "action": "b", "owner": "hermes", "depends_on": ["a"]},
+            {"id": "a", "title": "A", "action": "a", "owner": "agentflow", "depends_on": []},
+            {"id": "b", "title": "B", "action": "b", "owner": "agentflow", "depends_on": ["a"]},
         ]
     }
     previous = [{"step_id": "a", "status": "done", "output": "done a", "error": None, "artifacts": []}]

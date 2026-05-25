@@ -1,10 +1,10 @@
 ---
-name: hermes-workflow
-description: Activate the Hermes workflow MVP runtime for explicit workflow prefixes or conservative semantic workflow design/planning requests.
+name: agentflow-workflow
+description: Activate the AgentFlow workflow MVP runtime for explicit workflow prefixes or conservative semantic workflow design/planning requests.
 version: 0.1.1
 ---
 
-# Hermes Workflow
+# AgentFlow Workflow
 
 Use this skill when the user explicitly asks to run the workflow runtime, or when the request conservatively matches a workflow-design/planning intent.
 
@@ -28,7 +28,7 @@ Route to `workflow` mode only when both groups appear in the same message:
 
 Examples that should trigger:
 
-- `建一個 backend interview prep workflow`
+- `建一個 incident response workflow`
 - `幫我設計一個多階段流程`
 - `plan 一個 workflow，先給我看`
 

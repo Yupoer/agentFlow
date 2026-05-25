@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 try:
-    from runtime.tool_registry import HermesToolRegistry
+    from runtime.tool_registry import ToolRegistry
     from runtime.validator import (
         LLMQuotaExceededError,
         ValidationError,
@@ -18,7 +18,7 @@ try:
         validate_stage_output,
     )
 except ModuleNotFoundError:
-    from tool_registry import HermesToolRegistry
+    from tool_registry import ToolRegistry
     from validator import (
         LLMQuotaExceededError,
         ValidationError,
@@ -31,7 +31,7 @@ except ModuleNotFoundError:
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LLM_QUOTA_BLOCKED_REASON = "LLM quota exceeded, workflow paused"
-DELEGATE_UNAVAILABLE_ERROR = "delegate_task unavailable; Stage 3 requires Hermes delegate_task"
+DELEGATE_UNAVAILABLE_ERROR = "delegate_task unavailable; Stage 3 requires delegate_task"
 DelegateTaskFn = Callable[..., str]
 
 
@@ -42,13 +42,13 @@ class Stage3Executor:
         delegate_task: DelegateTaskFn | None,
         parent_agent: Any | None,
         schema_path: str | Path | None = None,
-        tool_registry: HermesToolRegistry | None = None,
+        tool_registry: ToolRegistry | None = None,
     ) -> None:
         self.delegate_task = delegate_task
         self.parent_agent = parent_agent
         self.schema_path = Path(schema_path) if schema_path else PROJECT_ROOT / "schemas" / "stage3-executor-output.schema.json"
         self.executor_output: dict[str, Any] | None = None
-        self.tool_registry = tool_registry or HermesToolRegistry()
+        self.tool_registry = tool_registry or ToolRegistry()
 
     def run(self, plan: dict[str, Any], *, previous_results: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         steps = list(plan.get("steps") or [])
@@ -140,7 +140,7 @@ class Stage3Executor:
         step_id = step["id"]
         raw_delegate_result = self.delegate_task(
             goal=(
-                f"Run Hermes Workflow Stage 3 Executor step_id={step_id} "
+                f"Run AgentFlow Workflow Stage 3 Executor step_id={step_id} "
                 "Return one valid JSON string only with keys: step_id, status, output, error, artifacts. "
                 "status must be done, failed, or skipped. No markdown, code fences, explanations, or surrounding text."
             ),

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -42,7 +43,7 @@ def url_reachable(uri: str) -> bool:
     if not uri.startswith(("http://", "https://")):
         return False
     for method in ("HEAD", "GET"):
-        request = Request(uri, method=method, headers={"User-Agent": "hermes-workflow-verifier/0.1"})
+        request = Request(uri, method=method, headers={"User-Agent": "agentflow-verifier/0.1"})
         try:
             with urlopen(request, timeout=10) as response:
                 if 200 <= response.status < 400:
@@ -74,7 +75,8 @@ def email_verified(uri: str, artifact: dict[str, Any] | None = None) -> bool:
     if not candidates:
         return False
 
-    for folder in ("sent", "Sent", "[Gmail]/Sent Mail", "[Gmail]/寄件備份"):
+    folders = os.environ.get("AGENTFLOW_SENT_FOLDERS", "sent,Sent").split(",")
+    for folder in [folder.strip() for folder in folders if folder.strip()]:
         try:
             proc = subprocess.run(
                 ["himalaya", "envelope", "list", "--folder", folder, "--page-size", "50", "--output", "json"],

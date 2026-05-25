@@ -16,7 +16,7 @@ def test_stage3_preflight_marks_standalone_when_delegate_unavailable(tmp_path):
 
     assert result["execution_mode"] == "standalone"
     assert result["stage3_available"] is False
-    assert result["partial_reason"] == "delegate_task unavailable; Stage 3 requires Hermes delegate_task"
+    assert result["partial_reason"] == "delegate_task unavailable; Stage 3 requires delegate_task"
     assert result["final_output"]["execution_mode"] == "standalone"
     assert result["final_output"]["stage3_available"] is False
 

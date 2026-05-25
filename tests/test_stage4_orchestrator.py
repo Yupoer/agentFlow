@@ -27,7 +27,7 @@ def test_orchestrator_runs_stage4_after_stage3_and_writes_verifier_output(tmp_pa
                     "status": "ready",
                     "summary": "execute one step",
                     "steps": [
-                        {"id": "a", "title": "A", "action": "run a", "owner": "hermes", "depends_on": []},
+                        {"id": "a", "title": "A", "action": "run a", "owner": "agentflow", "depends_on": []},
                     ],
                     "risks": [],
                     "artifacts": [],

@@ -34,7 +34,7 @@ def _parse_set(values: list[str]) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="hermes-workflow")
+    parser = argparse.ArgumentParser(prog="agentflow-workflow")
     sub = parser.add_subparsers(dest="command", required=True)
 
     run = sub.add_parser("run", help="run a natural-language workflow message")
