@@ -1,8 +1,8 @@
-# hermes-workflow
+# AgentFlow
 
-Reusable Agent Workflow Runtime for Hermes Agent.
+Reusable AI Agent Workflow Runtime.
 
-`hermes-workflow` turns complex AI-agent requests from one-shot prompt responses into structured, resumable, and verifiable multi-stage workflows.
+AgentFlow turns complex AI-agent requests from one-shot prompt responses into structured, resumable, and verifiable multi-stage workflows.
 
 ## What problem this solves
 
@@ -70,7 +70,7 @@ Each step can include:
 
 ### Stage 3: Executor
 
-Executes plan steps in dependency order using Hermes `delegate_task`.
+Executes plan steps in dependency order using a pluggable `delegate_task` adapter.
 
 Important behavior:
 
@@ -139,7 +139,7 @@ Review-first markers disable execution and stop after Stage 1/2 planning:
 
 ```text
 standalone
-- no live Hermes parent_agent context, or no delegate_task
+- no live parent_agent context, or no delegate_task
 - Stage 1/2 can use a fallback llm callable in tests
 - Stage 3 reports delegate unavailable instead of pretending execution succeeded
 
@@ -202,7 +202,7 @@ runtime/                  workflow runtime implementation
 schemas/                  Stage 1-5 JSON schemas
 prompts/                  Stage 1/2 prompt templates
 kernel/                   kernel and routing rules
-skills/hermes-workflow/   Hermes skill draft and usage notes
+skills/hermes-workflow/   optional Hermes Agent skill draft and usage notes
 workflows/                reusable workflow templates
 tests/                    pytest coverage
 manifest.json             runtime manifest
@@ -210,7 +210,7 @@ manifest.json             runtime manifest
 
 ## Current status
 
-This is an MVP / prototype internal runtime, not a production-grade distributed workflow platform.
+This is an MVP / personal prototype, not a production-grade distributed workflow platform.
 
 Implemented core capabilities:
 
@@ -234,4 +234,4 @@ Known areas for future hardening:
 - observability and tracing
 - concurrency control
 - production scheduling
-- deeper integration with live Hermes runtime contexts
+- deeper integration with live agent runtime contexts
