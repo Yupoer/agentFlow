@@ -1,0 +1,24 @@
+{
+  "tool": "Temporal",
+  "use_case": [
+    "Build fault-tolerant, long-running business workflows and distributed applications with durable execution.",
+    "Coordinate unreliable external services, users, devices, microservices, and infrastructure operations with retries and recovery.",
+    "Implement order processing, payments, provisioning, cloud automation, ML training pipelines, and other processes that must complete despite crashes."
+  ],
+  "pros": [
+    "Very strong durability model: workflow state and event history allow execution to recover, replay, pause, and continue after failures.",
+    "Excellent fit for distributed systems, microservices coordination, long-running business processes, retries, timeouts, and compensation logic.",
+    "Polyglot SDK ecosystem lets teams write workflow and activity code in general-purpose languages rather than YAML-only orchestration.",
+    "Can be self-hosted or used through Temporal Cloud; application workers remain in the team's own infrastructure."
+  ],
+  "cons": [
+    "Higher conceptual and operational complexity than simpler Python-first orchestrators: workflows, activities, workers, task queues, histories, and determinism rules must be understood.",
+    "Requires a Temporal service plus workers, so setup is heavier for small scripts or simple scheduled data jobs.",
+    "Workflow code must follow deterministic execution constraints, which can surprise teams new to replay-based systems.",
+    "Not specifically designed around LLM agent graphs or prompt/tool evaluation workflows."
+  ],
+  "sources": [
+    "https://temporal.io/how-it-works",
+    "https://docs.temporal.io/"
+  ]
+}

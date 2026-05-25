@@ -188,6 +188,20 @@ Current examples include:
 - `taiwan_job_interview_prep.yaml`
 - `taiwan_job_application_batch.yaml`
 
+## Demos
+
+A small workflow-tool comparison demo is available at:
+
+```text
+demos/workflow-tool-comparison/README.md
+```
+
+It shows the review-first path: plan preview, user approval, artifact generation, and deterministic validation. The generated comparison document is:
+
+```text
+demos/workflow-tool-comparison/comparison.md
+```
+
 ## Run tests
 
 ```bash
@@ -204,6 +218,7 @@ prompts/                  Stage 1/2 prompt templates
 kernel/                   kernel and routing rules
 skills/hermes-workflow/   optional Hermes Agent skill draft and usage notes
 workflows/                reusable workflow templates
+demos/                    generated workflow demo artifacts
 tests/                    pytest coverage
 manifest.json             runtime manifest
 ```

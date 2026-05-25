@@ -1,0 +1,24 @@
+{
+  "tool": "LangGraph",
+  "use_case": [
+    "Build long-running, stateful LLM agents and agentic workflows.",
+    "Model agent control flow as explicit graphs with nodes, edges, state, and conditional routing.",
+    "Support human-in-the-loop review, streaming, persistence, and durable execution for production AI systems."
+  ],
+  "pros": [
+    "Strong fit for LLM/agent orchestration, especially when workflows need state, branching, memory, and human checkpoints.",
+    "Low-level graph model gives developers precise control over agent behavior instead of forcing a fixed agent architecture.",
+    "Can be used standalone, while also integrating naturally with LangChain and LangSmith for models, tools, tracing, debugging, and evaluation.",
+    "Durable execution and persistence help long-running agents recover from interruptions."
+  ],
+  "cons": [
+    "More specialized for AI agents than general business process or data pipeline orchestration.",
+    "Lower-level control means teams must design graph structure, state schema, routing, and operational patterns themselves.",
+    "Production observability and evaluation are strongest when paired with LangSmith, which may add platform dependency.",
+    "Less suitable when the primary need is non-AI distributed transaction orchestration or large-scale data pipeline scheduling."
+  ],
+  "sources": [
+    "https://docs.langchain.com/oss/python/langgraph/overview",
+    "https://github.com/langchain-ai/langgraph"
+  ]
+}

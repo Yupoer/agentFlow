@@ -1,0 +1,24 @@
+{
+  "tool": "Prefect",
+  "use_case": [
+    "Orchestrate Python-based data pipelines, ETL/ELT jobs, analytics workflows, and scheduled automation.",
+    "Turn ordinary Python functions into observable, retryable, production workflows with minimal framework overhead.",
+    "Run flows locally, in containers, Kubernetes, cloud infrastructure, or Prefect Cloud/self-hosted server."
+  ],
+  "pros": [
+    "Very Pythonic: workflows are normal Python functions with decorators, type hints, async support, and normal testing/debugging tools.",
+    "Good developer experience for data teams: scheduling, retries, caching, state tracking, logs, UI monitoring, and dependency visualization.",
+    "Portable execution model: can start locally and deploy to multiple infrastructure targets without rewriting workflow logic.",
+    "Supports dynamic runtime behavior, event-driven triggers, automations, and human approval pauses."
+  ],
+  "cons": [
+    "Best aligned with Python data/application workflows; less natural for polyglot distributed systems than Temporal.",
+    "Durability model is workflow-orchestrator oriented, not the same as Temporal-style deterministic replay of application state.",
+    "Operational features may require running Prefect server/Cloud and managing deployments, workers, and infrastructure blocks.",
+    "For complex cross-service transactions, compensation, and very long-lived business processes, Temporal is usually stronger."
+  ],
+  "sources": [
+    "https://docs.prefect.io/v3/get-started",
+    "https://github.com/PrefectHQ/prefect"
+  ]
+}
